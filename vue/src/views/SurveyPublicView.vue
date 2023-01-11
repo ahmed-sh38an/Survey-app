@@ -44,3 +44,42 @@
         </form>
     </div>    
 </template>
+
+<script setup>
+import {computed, ref} from "vue";
+import { useRoute } from "vue-router";
+import { useStore } from "vuex";
+import QuestionViewer from "../components/viewer/QuestionViewer.vue";
+
+const route = useRoute();
+const store = useStore()
+
+const loading = computed(() => store.state.currentSurvey.loading)
+const survey = computed(() => store.state.currentSurvey.data)
+
+const surveyFinished =  ref(false);
+
+const answers = ref({})
+
+store.dispatch("getSurveyBySlug", route.params.slug);
+
+function submitSurvey() {
+    console.log(JSON.stringify(answers.value, undefined, 2));
+    store
+        .dispatch("saveSurveyAnswer", {
+            surveyId: survey.value.id,
+            answers: answers.value,
+        })
+        .then((response) => {
+            if (response.status === 201) {
+                surveyFinished.value = true;
+            }
+        })
+}
+
+function submitAnotherResponse() {
+    answers.value = {};
+    surveyFinished.value = false;
+}
+
+</script>
