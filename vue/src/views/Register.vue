@@ -21,13 +21,17 @@
     </p>
   </div>
   <form class="mt-8 space-y-6" @submit="register">
-    <div
-      v-if="errorMsg"
-      class="flex items-center justify-between py-3 px-5 bg-red-500 text-white rounded"
+    <Alert
+      v-if="Object.keys(errors).length"
+      class="flex-col items-stretch text-sm"
     >
-      {{ errorMsg }}
+      <div v-for="(field, i) of Object.keys(errors)" :key="i">
+        <div v-for="(error, ind) of errors[field] || []" :key="ind">
+          * {{ error }}
+        </div>
+      </div>
       <span
-        @click="errorMsg = ''"
+        @click="errors = ''"
         class="w-8 h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[rgba(0,0,0.2)]"
       >
         <svg
@@ -45,7 +49,7 @@
           />
         </svg>
       </span>
-    </div>
+    </Alert>
     <input type="hidden" name="remember" value="true" />
     <div class="-space-y-px rounded-md shadow-sm">
       <div>
@@ -126,8 +130,8 @@ import { LockClosedIcon } from "@heroicons/vue/20/solid";
 import { useRouter } from "vue-router";
 import store from "../store";
 import { ref } from "vue";
+import Alert from "../components/Alert.vue";
 
-let errorMsg = ref("");
 const router = useRouter();
 
 const user = {
@@ -136,6 +140,8 @@ const user = {
   password: "",
   password_confirmation: "",
 };
+
+const errors = ref({});
 
 function register(ev) {
   ev.preventDefault();
@@ -147,7 +153,9 @@ function register(ev) {
       });
     })
     .catch((err) => {
-      errorMsg.value = err.response.data.error;
+      if (err.response.status === 422) {
+        errors.value = err.response.data.errors;
+      }
     });
 }
 </script>
